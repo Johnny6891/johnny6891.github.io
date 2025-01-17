@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Torque Wrench QC</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     @property --bg-angle {
       inherits: false;
@@ -52,7 +53,7 @@
     .button {
       position: relative;
       padding: 15px 20px;
-      border: 6px solid white;  /* 初始為白色邊框 */
+      border: 6px solid white;
       border-radius: 25px;
       background-color: #FF8C42;
       color: white;
@@ -64,7 +65,7 @@
     }    
 
     .button:hover {
-      border: 6px solid transparent;  /* 懸停時改為透明邊框 */
+      border: 6px solid transparent;
       background-image: linear-gradient(to bottom, #FF8C42, #FF8C42),
                       conic-gradient(from var(--bg-angle) in oklch longer hue, 
                                    oklch(0.85 0.37 0) 0 0);
@@ -74,6 +75,27 @@
       transform: translateY(-5px);
       font-size: 17px;
       font-weight: bold;
+    }
+
+    /* 新增 QR 碼按鈕的特殊樣式 */
+    .qr-button {
+      margin-top: 40px;  /* 增加與上方按鈕的距離 */
+      background-color: #4A90E2;  /* 使用不同的背景顏色 */
+      border-color: #87CEEB;  /* 使用不同的邊框顏色 */
+    }
+
+    .qr-button:hover {
+      background-image: linear-gradient(to bottom, #4A90E2, #4A90E2),
+                      conic-gradient(from var(--bg-angle) in oklch longer hue, 
+                                   oklch(0.85 0.37 180) 0 0);  /* 調整漸層色相 */
+    }
+
+    #qrCodeContainer {
+      margin-top: 20px;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      display: none;
     }
     
     .stars {
@@ -101,8 +123,10 @@
     <a href="https://script.google.com/macros/s/AKfycbxacXZM_BAYwqxdR_qUGl7SeQHOMo6LXHv2oeDUeCXqosXwqjhP1XUQh9gfx5Qxt11pTA/exec" 
        target="_blank" 
        class="button">機械式 | Torsi Mekanis | Mechanical Torque</a>
+    <button onclick="generateQRCode()" class="button qr-button">產生QR碼 | Buat QR Code | QR Code</button>
   </div>
 
+  <div id="qrCodeContainer"></div>
   <canvas id="starsCanvas" class="stars"></canvas>
 
   <script>
@@ -151,6 +175,22 @@
     }
     
     animate();
+
+    // QR Code generation
+    function generateQRCode() {
+      const container = document.getElementById('qrCodeContainer');
+      container.innerHTML = ''; // Clear previous QR code
+      container.style.display = 'block';
+      
+      new QRCode(container, {
+        text: "https://johnny6891.github.io/",
+        width: 200,
+        height: 200,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }
   </script>
 </body>
 </html>
