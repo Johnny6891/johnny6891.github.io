@@ -1,175 +1,94 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>系統導航</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>卡片式布局</title>
+  <style>
+    /* 全局樣式 */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #f5f5f5;
-            min-height: 100vh;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+    /* 容器樣式 */
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      padding: 16px;
+      width: 100%;
+      max-width: 800px;
+    }
 
-        .container {
-            max-width: 1200px;
-            width: 100%;
-        }
+    /* 卡片樣式 */
+    .card {
+      background: #ffffff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      text-align: center;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            padding: 20px;
-        }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+    }
 
-        .card {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            cursor: pointer;
-            text-decoration: none;
-            color: #333;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 150px;
-            position: relative;
-        }
+    /* 圖標樣式 */
+    .icon {
+      font-size: 40px;
+      margin-bottom: 10px;
+      color: #4CAF50;
+    }
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-        }
+    /* 標題樣式 */
+    .card h2 {
+      font-size: 18px;
+      color: #333;
+      margin: 0;
+    }
 
-        .card-content {
-            padding: 20px;
-            text-align: center;
-            width: 100%;
-        }
+    /* 響應式設計 */
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
 
-        .card-title {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #2c3e50;
-        }
-
-        @media (max-width: 768px) {
-            .grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 480px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        #qrcode {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            display: none;
-            z-index: 1000;
-        }
-
-        #qrcode.show {
-            display: block;
-        }
-
-        #overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: none;
-            z-index: 999;
-        }
-
-        #overlay.show {
-            display: block;
-        }
-    </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    @media (max-width: 480px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="grid">
-            <a href="https://alstonhsiao.github.io/dgstand/standWorkFlow/2F.html" class="card">
-                <div class="card-content">
-                    <div class="card-title">報工</div>
-                </div>
-            </a>
-            <a href="script.google.com/a/macros/dgstand.com/s/AKfycbz6qB6abhomvLEYDewqcdHVhK10wh4ozgE2sCrKHfBb2NlmvW_j1xlJ3tHQ0pu1upp23w/exec" class="card">
-                <div class="card-content">
-                    <div class="card-title">SOP</div>
-                </div>
-            </a>
-            <a href="Torque Wrench QC" class="card">
-                <div class="card-content">
-                    <div class="card-title">QC</div>
-                </div>
-            </a>
-            <div class="card" onclick="showQRCode()">
-                <div class="card-content">
-                    <div class="card-title">QR Code</div>
-                </div>
-            </div>
-        </div>
+  <div class="container">
+    <div class="card">
+      <div class="icon">📋</div>
+      <h2>報工</h2>
     </div>
-
-    <div id="overlay" onclick="hideQRCode()"></div>
-    <div id="qrcode"></div>
-
-    <script>
-        function showQRCode() {
-            const qrcodeContainer = document.getElementById('qrcode');
-            const overlay = document.getElementById('overlay');
-            
-            // 清除之前的QR碼
-            qrcodeContainer.innerHTML = '';
-            
-            // 生成新的QR碼
-            new QRCode(qrcodeContainer, {
-                text: window.location.href,
-                width: 256,
-                height: 256
-            });
-            
-            // 顯示QR碼和遮罩
-            qrcodeContainer.classList.add('show');
-            overlay.classList.add('show');
-        }
-
-        function hideQRCode() {
-            const qrcodeContainer = document.getElementById('qrcode');
-            const overlay = document.getElementById('overlay');
-            
-            // 隱藏QR碼和遮罩
-            qrcodeContainer.classList.remove('show');
-            overlay.classList.remove('show');
-        }
-    </script>
+    <div class="card">
+      <div class="icon">📑</div>
+      <h2>SOP</h2>
+    </div>
+    <div class="card">
+      <div class="icon">✔️</div>
+      <h2>QC</h2>
+    </div>
+    <div class="card">
+      <div class="icon">🔍</div>
+      <h2>QR Code</h2>
+    </div>
+  </div>
 </body>
 </html>
