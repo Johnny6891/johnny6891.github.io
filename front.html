@@ -34,8 +34,11 @@
             display: none;
         }
 
+        /* 調整卡片大小以適應8吋平板 */
         .card {
-            flex: 0 0 280px;
+            flex: 0 0 calc(100% - 40px); /* 減去padding */
+            max-width: 600px; /* 設置最大寬度 */
+            height: 300px; /* 增加高度 */
             scroll-snap-align: start;
             background-color: #1e1e1e;
             border-radius: 15px;
@@ -57,24 +60,24 @@
         }
 
         .card-content {
-            padding: 30px;
+            padding: 40px;
             text-align: center;
-            height: 180px;
+            height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 15px;
+            gap: 25px;
         }
 
         .icon {
-            width: 40px;
-            height: 40px;
+            width: 80px; /* 增加圖示大小 */
+            height: 80px;
             fill: #6b8afd;
         }
 
         .card-title {
-            font-size: 1.5em;
+            font-size: 2em; /* 增加標題大小 */
             color: #ffffff;
             font-weight: normal;
         }
@@ -86,7 +89,7 @@
             transform: translateX(-50%);
             color: #ffffff;
             opacity: 0.7;
-            font-size: 0.9em;
+            font-size: 1.2em;
             animation: bounce 2s infinite;
         }
 
@@ -99,6 +102,12 @@
             }
             60% {
                 transform: translateX(-50%) translateY(-5px);
+            }
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                justify-content: center;
             }
         }
     </style>
@@ -117,8 +126,9 @@
         
         <div class="card" onclick="openInNewWindow('https://script.google.com/a/macros/dgstand.com/s/AKfycbz6qB6abhomvLEYDewqcdHVhK10wh4ozgE2sCrKHfBb2NlmvW_j1xlJ3tHQ0pu1upp23w/exec')">
             <div class="card-content">
+                <!-- 更新的SOP圖示 -->
                 <svg class="icon" viewBox="0 0 24 24">
-                    <path d="M21 4H3C1.9 4 1 4.9 1 6V19C1 20.1 1.9 21 3 21H21C22.1 21 23 20.1 23 19V6C23 4.9 22.1 4 21 4ZM3 6H11V19H3V6ZM21 19H13V6H21V19ZM14 9.5H20V11H14V9.5ZM14 12H20V13.5H14V12ZM14 14.5H20V16H14V14.5Z"/>
+                    <path d="M12 2L2 7L12 12L22 7L12 2zM2 17L12 22L22 17V7L12 12L2 7V17zM12 12.5L2 7.5V15L12 20L22 15V7.5L12 12.5z"/>
                 </svg>
                 <h2 class="card-title">SOP</h2>
             </div>
@@ -126,8 +136,9 @@
         
         <div class="card" onclick="openInNewWindow('https://johnny6891.github.io/')">
             <div class="card-content">
+                <!-- 更新的QC圖示 -->
                 <svg class="icon" viewBox="0 0 24 24">
-                    <path d="M19 3H5C3.89 3 3 3.9 3 5V19C3 20.1 3.89 21 5 21H19C20.11 21 21 20.1 21 19V5C21 3.9 20.11 3 19 3ZM19 5V19H5V5H19ZM10 17L6 13L7.41 11.59L10 14.17L16.59 7.58L18 9L10 17Z"/>
+                    <path d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z"/>
                 </svg>
                 <h2 class="card-title">QC</h2>
             </div>
