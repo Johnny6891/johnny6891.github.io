@@ -1,78 +1,119 @@
-import React, { useState } from 'react';
-import { FileText, BookOpen, CheckCircle, QrCode } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>垂直選單</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
 
-const TabletLayouts = () => {
-  const [activeLayout, setActiveLayout] = useState('horizontal');
-  
-  const buttons = [
-    { id: 1, text: '報工', icon: <FileText size={28} /> },
-    { id: 2, text: 'SOP', icon: <BookOpen size={28} /> },
-    { id: 3, text: 'QC', icon: <ClipboardCheck size={28} /> },
-    { id: 4, text: 'QR Code', icon: <QrCode size={28} /> },
-  ];
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px;
+        }
 
-  const layouts = {
-    horizontal: "flex flex-row justify-center gap-4 flex-wrap",
-    vertical: "flex flex-col gap-4 max-w-md mx-auto",
-    compact: "grid grid-cols-4 gap-4",
-    twoRows: "grid grid-cols-2 gap-4"
-  };
+        .menu-button {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            background-color: #ffffff;
+            color: #333;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 200px;
+        }
 
-  const buttonStyles = {
-    horizontal: "flex flex-row items-center justify-center gap-3 bg-white rounded-lg shadow-lg p-4 hover:bg-gray-50 active:bg-gray-100 transition-colors border border-gray-200 min-w-48",
-    vertical: "flex flex-row items-center gap-4 bg-white rounded-lg shadow-lg p-4 hover:bg-gray-50 active:bg-gray-100 transition-colors border border-gray-200",
-    compact: "flex flex-col items-center justify-center bg-white rounded-lg shadow-lg p-4 hover:bg-gray-50 active:bg-gray-100 transition-colors border border-gray-200",
-    twoRows: "flex flex-col items-center justify-center bg-white rounded-lg shadow-lg p-6 hover:bg-gray-50 active:bg-gray-100 transition-colors border border-gray-200"
-  };
+        .menu-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
 
-  return (
-    <div className="w-full p-4 space-y-8">
-      {/* 布局切換器 */}
-      <div className="flex justify-center gap-4 mb-6">
-        <button 
-          onClick={() => setActiveLayout('horizontal')}
-          className={`px-4 py-2 rounded ${activeLayout === 'horizontal' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-        >
-          水平排列
+        #qrcode {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        #qrcode.show {
+            display: block;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="button-container">
+        <button class="menu-button" onclick="window.open('https://alstonhsiao.github.io/dgstand/standWorkFlow/2F.html', '_blank')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+            報工
         </button>
-        <button 
-          onClick={() => setActiveLayout('vertical')}
-          className={`px-4 py-2 rounded ${activeLayout === 'vertical' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-        >
-          垂直排列
+        <button class="menu-button" onclick="window.open('https://script.google.com/a/macros/dgstand.com/s/AKfycbz6qB6abhomvLEYDewqcdHVhK10wh4ozgE2sCrKHfBb2NlmvW_j1xlJ3tHQ0pu1upp23w/exec', '_blank')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            SOP
         </button>
-        <button 
-          onClick={() => setActiveLayout('compact')}
-          className={`px-4 py-2 rounded ${activeLayout === 'compact' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-        >
-          緊湊排列
+        <button class="menu-button" onclick="window.open('https://johnny6891.github.io/', '_blank')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect width="6" height="4" x="9" y="3" rx="2"/><path d="m9 14 2 2 4-4"/></svg>
+            QC
         </button>
-        <button 
-          onClick={() => setActiveLayout('twoRows')}
-          className={`px-4 py-2 rounded ${activeLayout === 'twoRows' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-        >
-          兩行排列
+        <button class="menu-button" onclick="showQRCode()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>
+            QR Code
         </button>
-      </div>
-
-      {/* 按鈕區域 */}
-      <div className={layouts[activeLayout]}>
-        {buttons.map((button) => (
-          <button
-            key={button.id}
-            className={buttonStyles[activeLayout]}
-          >
-            <div className="text-blue-600">
-              {button.icon}
-            </div>
-            <span className="text-lg font-medium text-gray-800">
-              {button.text}
-            </span>
-          </button>
-        ))}
-      </div>
     </div>
-  );
-};
 
-export default TabletLayouts;
+    <div id="qrcode">
+        <button class="close-button" onclick="hideQRCode()">×</button>
+    </div>
+
+    <script>
+        function showQRCode() {
+            const qrcodeDiv = document.getElementById('qrcode');
+            qrcodeDiv.innerHTML = '<button class="close-button" onclick="hideQRCode()">×</button>';
+            qrcodeDiv.classList.add('show');
+            
+            new QRCode(qrcodeDiv, {
+                text: window.location.href,
+                width: 256,
+                height: 256
+            });
+        }
+
+        function hideQRCode() {
+            const qrcodeDiv = document.getElementById('qrcode');
+            qrcodeDiv.classList.remove('show');
+            qrcodeDiv.innerHTML = '<button class="close-button" onclick="hideQRCode()">×</button>';
+        }
+    </script>
+</body>
+</html>
