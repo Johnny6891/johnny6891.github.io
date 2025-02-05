@@ -14,35 +14,39 @@
         }
         .card {
             background: #2a2a2a;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 10px;
-            width: 300px;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 15px;
+            width: 400px;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
             border: 1px solid #3a3a3a;
             cursor: pointer;
             transition: transform 0.2s;
+            text-decoration: none;
         }
         .card:hover {
             transform: translateY(-2px);
+            background: #323232;
         }
         .icon {
             color: #ff69b4;
-            width: 24px;
-            height: 24px;
+            width: 36px;
+            height: 36px;
         }
         .text {
             color: white;
-            font-size: 18px;
+            font-size: 24px;
             font-weight: 500;
         }
     </style>
 </head>
 <body>
-    <div class="card">
-        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <a href="https://script.google.com/macros/s/AKfycby2oOabq4mX_fwbaecK4R23hIxGvKmM5E0eh5eVYNMyjA_lx8I_UQICAhD8VqnaMzZPzA/exec" 
+       target="_blank" 
+       class="card">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
             <polyline points="14 2 14 8 20 8"/>
             <path d="M12 18v-6"/>
@@ -50,14 +54,16 @@
             <path d="M16 18v-3"/>
         </svg>
         <span class="text">品質異常通知</span>
-    </div>
+    </a>
     
-    <div class="card">
-        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <a href="https://script.google.com/macros/s/AKfycbwjrXyUKW8-JtyFNPjdz5vky-KS0BvFHAs5jpC6DFBySO2ORYx10l0sYGz-9EG-CPpCFQ/exec" 
+       target="_blank" 
+       class="card">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="2" y="4" width="20" height="16" rx="2"/>
             <path d="M7 15h0M2 9.5h20"/>
         </svg>
         <span class="text">請購通知</span>
-    </div>
+    </a>
 </body>
 </html>
