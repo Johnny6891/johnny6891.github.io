@@ -15,16 +15,17 @@
         .card {
             background: #2a2a2a;
             border-radius: 16px;
-            padding: 40px;  /* 增加內邊距 */
+            padding: 40px;
             margin: 20px;
-            width: 600px;   /* 增加卡片寬度 */
+            width: 600px;
             display: flex;
             align-items: center;
-            gap: 30px;      /* 增加圖標和文字間距 */
+            gap: 30px;
             border: 1px solid #3a3a3a;
             cursor: pointer;
             transition: transform 0.2s;
             text-decoration: none;
+            position: relative;
         }
         .card:hover {
             transform: translateY(-2px);
@@ -32,13 +33,26 @@
         }
         .icon {
             color: #ff69b4;
-            width: 48px;    /* 增加圖標尺寸 */
-            height: 48px;   /* 增加圖標尺寸 */
+            width: 48px;
+            height: 48px;
+            flex-shrink: 0;
         }
         .text {
             color: white;
-            font-size: 36px;  /* 增加文字大小 */
+            font-size: 36px;
             font-weight: 500;
+        }
+        .timestamp {
+            position: absolute;
+            right: 40px;
+            color: #ff69b4;
+            font-size: 18px;
+            font-weight: 400;
+        }
+        .content-wrapper {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
         }
     </style>
 </head>
@@ -46,24 +60,114 @@
     <a href="https://script.google.com/macros/s/AKfycby2oOabq4mX_fwbaecK4R23hIxGvKmM5E0eh5eVYNMyjA_lx8I_UQICAhD8VqnaMzZPzA/exec" 
        target="_blank" 
        class="card">
-        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <path d="M12 18v-6"/>
-            <path d="M8 18v-1"/>
-            <path d="M16 18v-3"/>
-        </svg>
-        <span class="text">品質異常通知</span>
+        <div class="content-wrapper">
+            <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <path d="M12 18v-6"/>
+                <path d="M8 18v-1"/>
+                <path d="M16 18v-3"/>
+            </svg>
+            <span class="text">品質異常通知</span>
+        </div>
+        <span class="timestamp" id="quality-timestamp">載入中...</span>
     </a>
     
     <a href="https://script.google.com/macros/s/AKfycbwjrXyUKW8-JtyFNPjdz5vky-KS0BvFHAs5jpC6DFBySO2ORYx10l0sYGz-9EG-CPpCFQ/exec" 
        target="_blank" 
        class="card">
-        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="4" width="20" height="16" rx="2"/>
-            <path d="M7 15h0M2 9.5h20"/>
-        </svg>
-        <span class="text">請購通知</span>
+        <div class="content-wrapper">
+            <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <path d="M7 15h0M2 9.5h20"/>
+            </svg>
+            <span class="text">請購通知</span>
+        </div>
+        <span class="timestamp" id="purchase-timestamp">載入中...</span>
     </a>
+
+    <script>
+        // 設定工作表資訊
+        const QUALITY_SHEET = {
+            id: '1vJggw-gh3nAtjYxRsdnZu-L7qFocksdaihMuj2gog9M',
+            name: '表單回應 1'
+        };
+        
+        const PURCHASE_SHEETS = [
+            {
+                id: '1HWmS8nrXr0OKTdRBv67hTjNq8kfObZcUzvE4tlABHL4',
+                name: '表單回應 1'
+            },
+            {
+                id: '122gY2j5FzeMJZw5e9UVoTbs3hLp97oSMRsdCVFnPpS0',
+                name: '表單回應 1'
+            }
+        ];
+
+        // 格式化時間
+        function formatDateTime(dateStr) {
+            const date = new Date(dateStr);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            
+            return `${year}/${month}/${day} ${hours}:${minutes}`;
+        }
+
+        // 從單一工作表取得最新時間
+        async function fetchSheetLastTimestamp(sheetId, sheetName) {
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+            
+            try {
+                const response = await fetch(url);
+                const text = await response.text();
+                const json = JSON.parse(text.substr(47).slice(0, -2));
+                
+                if (json.table.rows.length === 0) {
+                    return null;
+                }
+
+                // 取得時間戳記欄位（假設是第一欄）
+                const lastRow = json.table.rows[json.table.rows.length - 1];
+                return lastRow.c[0].v;  // 取得最後一列的時間戳記
+                
+            } catch (error) {
+                console.error('Error fetching sheet:', error);
+                return null;
+            }
+        }
+
+        // 更新時間顯示
+        async function updateTimestamps() {
+            // 更新品質異常時間
+            const qualityTimestamp = await fetchSheetLastTimestamp(QUALITY_SHEET.id, QUALITY_SHEET.name);
+            if (qualityTimestamp) {
+                document.getElementById('quality-timestamp').textContent = formatDateTime(qualityTimestamp);
+            }
+
+            // 更新請購時間（比較兩個工作表取最新）
+            let latestPurchaseTimestamp = null;
+            for (const sheet of PURCHASE_SHEETS) {
+                const timestamp = await fetchSheetLastTimestamp(sheet.id, sheet.name);
+                if (timestamp) {
+                    if (!latestPurchaseTimestamp || new Date(timestamp) > new Date(latestPurchaseTimestamp)) {
+                        latestPurchaseTimestamp = timestamp;
+                    }
+                }
+            }
+            
+            if (latestPurchaseTimestamp) {
+                document.getElementById('purchase-timestamp').textContent = formatDateTime(latestPurchaseTimestamp);
+            }
+        }
+
+        // 初始更新
+        updateTimestamps();
+
+        // 每分鐘更新一次
+        setInterval(updateTimestamps, 60000);
+    </script>
 </body>
 </html>
