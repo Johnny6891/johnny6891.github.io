@@ -106,14 +106,30 @@
 
         // 格式化時間
         function formatDateTime(dateStr) {
-            const date = new Date(dateStr);
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            
-            return `${year}/${month}/${day} ${hours}:${minutes}`;
+            try {
+                // 檢查是否為有效的日期字串
+                if (!dateStr || typeof dateStr !== 'string') {
+                    return '無資料';
+                }
+
+                const date = new Date(dateStr);
+                
+                // 檢查是否為有效的日期物件
+                if (isNaN(date.getTime())) {
+                    return '無資料';
+                }
+
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                
+                return `${year}/${month}/${day} ${hours}:${minutes}`;
+            } catch (error) {
+                console.error('Error formatting date:', error);
+                return '無資料';
+            }
         }
 
         // 從單一工作表取得最新時間
@@ -123,43 +139,55 @@
             try {
                 const response = await fetch(url);
                 const text = await response.text();
-                const json = JSON.parse(text.substr(47).slice(0, -2));
+                // 移除 Google 的回應包裝
+                const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+                const json = JSON.parse(jsonText);
                 
-                if (json.table.rows.length === 0) {
+                if (!json.table || !json.table.rows || json.table.rows.length === 0) {
                     return null;
                 }
 
-                // 取得時間戳記欄位（假設是第一欄）
+                // 取得最後一列
                 const lastRow = json.table.rows[json.table.rows.length - 1];
-                return lastRow.c[0].v;  // 取得最後一列的時間戳記
                 
+                // 確保時間戳記欄位存在且有值
+                if (!lastRow.c || !lastRow.c[0] || !lastRow.c[0].v) {
+                    return null;
+                }
+
+                return lastRow.c[0].v;
             } catch (error) {
-                console.error('Error fetching sheet:', error);
+                console.error('Error fetching sheet:', error, sheetId);
                 return null;
             }
         }
 
         // 更新時間顯示
         async function updateTimestamps() {
-            // 更新品質異常時間
-            const qualityTimestamp = await fetchSheetLastTimestamp(QUALITY_SHEET.id, QUALITY_SHEET.name);
-            if (qualityTimestamp) {
-                document.getElementById('quality-timestamp').textContent = formatDateTime(qualityTimestamp);
-            }
+            try {
+                // 更新品質異常時間
+                const qualityTimestamp = await fetchSheetLastTimestamp(QUALITY_SHEET.id, QUALITY_SHEET.name);
+                document.getElementById('quality-timestamp').textContent = 
+                    qualityTimestamp ? formatDateTime(qualityTimestamp) : '無資料';
 
-            // 更新請購時間（比較兩個工作表取最新）
-            let latestPurchaseTimestamp = null;
-            for (const sheet of PURCHASE_SHEETS) {
-                const timestamp = await fetchSheetLastTimestamp(sheet.id, sheet.name);
-                if (timestamp) {
-                    if (!latestPurchaseTimestamp || new Date(timestamp) > new Date(latestPurchaseTimestamp)) {
-                        latestPurchaseTimestamp = timestamp;
+                // 更新請購時間（比較兩個工作表取最新）
+                let latestPurchaseTimestamp = null;
+                for (const sheet of PURCHASE_SHEETS) {
+                    const timestamp = await fetchSheetLastTimestamp(sheet.id, sheet.name);
+                    if (timestamp) {
+                        if (!latestPurchaseTimestamp || new Date(timestamp) > new Date(latestPurchaseTimestamp)) {
+                            latestPurchaseTimestamp = timestamp;
+                        }
                     }
                 }
-            }
-            
-            if (latestPurchaseTimestamp) {
-                document.getElementById('purchase-timestamp').textContent = formatDateTime(latestPurchaseTimestamp);
+                
+                document.getElementById('purchase-timestamp').textContent = 
+                    latestPurchaseTimestamp ? formatDateTime(latestPurchaseTimestamp) : '無資料';
+
+            } catch (error) {
+                console.error('Error updating timestamps:', error);
+                document.getElementById('quality-timestamp').textContent = '無資料';
+                document.getElementById('purchase-timestamp').textContent = '無資料';
             }
         }
 
