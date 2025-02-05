@@ -54,6 +54,34 @@
             align-items: center;
             flex-grow: 1;
         }
+        
+        /* 載入動畫樣式 */
+        .loading {
+            display: inline-flex;
+            gap: 4px;
+        }
+        .loading span {
+            width: 4px;
+            height: 4px;
+            background-color: #ff69b4;
+            border-radius: 50%;
+            animation: bounce 0.5s alternate infinite;
+        }
+        .loading span:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+        .loading span:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes bounce {
+            from {
+                transform: translateY(0);
+            }
+            to {
+                transform: translateY(-4px);
+            }
+        }
     </style>
 </head>
 <body>
@@ -70,7 +98,13 @@
             </svg>
             <span class="text">品質異常通知</span>
         </div>
-        <span class="timestamp" id="quality-timestamp">載入中...</span>
+        <div class="timestamp" id="quality-timestamp">
+            <div class="loading">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
     </a>
     
     <a href="https://script.google.com/macros/s/AKfycbwjrXyUKW8-JtyFNPjdz5vky-KS0BvFHAs5jpC6DFBySO2ORYx10l0sYGz-9EG-CPpCFQ/exec" 
@@ -83,7 +117,13 @@
             </svg>
             <span class="text">請購通知</span>
         </div>
-        <span class="timestamp" id="purchase-timestamp">載入中...</span>
+        <div class="timestamp" id="purchase-timestamp">
+            <div class="loading">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
     </a>
 
     <script>
@@ -108,11 +148,28 @@
             }
         }
 
+        // 設置載入狀態
+        function setLoading(elementId, isLoading) {
+            const element = document.getElementById(elementId);
+            if (isLoading) {
+                element.innerHTML = `
+                    <div class="loading">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>`;
+            }
+        }
+
         // 更新時間顯示
         async function updateTimestamps() {
             try {
+                // 設置載入狀態
+                setLoading('quality-timestamp', true);
+                setLoading('purchase-timestamp', true);
+
                 // 替換成你的 Google Apps Script 網頁應用程式 URL
-                const response = await fetch('https://script.google.com/macros/s/AKfycbx-i9JfWGssYYm9eC8duERBmZu1pJqpAH9bZMpyCdgi9cWCQVeHC8_ezDz0DQq2hHxx/exec');
+                const response = await fetch('你的 Apps Script URL');
                 const data = await response.json();
                 
                 document.getElementById('quality-timestamp').textContent = 
