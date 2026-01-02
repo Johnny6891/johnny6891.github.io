@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>效率日誌圖表分析</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  
+  <!-- 【新增】Chart.js Annotation Plugin (用於繪製標示線) -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+  
+  <style>
+    /* 字體設定:使用更圓潤現代的字體 */
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+
+    body {
+      font-family: 'Noto Sans TC', 'Segoe UI', sans-serif;
+      /* 溫暖莫迪蘭漸層背景 */
+      background: linear-gradient(135deg, #FDFBF7 0%, #E6DCD3 50%, #D4C5C0 100%);
+      background-attachment: fixed; /* 背景固定,滑動時更有層次感 */
+      min-height: 100vh;
+      color: #4A4A4A; /* 深暖灰,比純黑更柔和 */
+    }
+    
+    /* === 毛玻璃特效核心 (Glassmorphism) === */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.45); /* 提高不透明度,讓內容更清楚但保持通透 */
+      backdrop-filter: blur(16px); /* 模糊背景 */
+      -webkit-backdrop-filter: blur(16px); /* Safari 支援 */
+      border: 1px solid rgba(255, 255, 255, 0.6); /* 半透明白邊框 */
+      box-shadow: 0 8px 32px 0 rgba(148, 142, 138, 0.15); /* 柔和的暖色陰影 */
+      border-radius: 20px; /* 更大的圓角 */
+    }
+    
+    .glass-header {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+    }
+    
+    .chart-container {
+      position: relative;
+      height: 400px;
+      margin-bottom: 2rem;
+    }
+    
+    /* 手機版圖表高度加大 */
+    @media (max-width: 768px) {
+      .chart-container {
+        height: 450px;
+      }
+    }
+    
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: rgba(255,255,255,0.3);
+      backdrop-filter: blur(5px);
+    }
+    
+    .spinner {
+      border: 4px solid rgba(125, 157, 156, 0.2); /* 莫迪蘭藍淡色 */
+      border-top: 4px solid #7D9D9C; /* 莫迪蘭藍 */
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .stat-card {
+      transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-5px);
+      background: rgba(255, 255, 255, 0.65); /* hover 時更亮一點 */
+      box-shadow: 0 12px 40px 0 rgba(148, 142, 138, 0.25);
+    }
+    
+    /* 通知訊息改用毛玻璃 */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      z-index: 1000;
+      animation: slideIn 0.3s ease-out;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.4);
+    }
+    
+    .btn-glass {
+      background: rgba(125, 157, 156, 0.9); /* 莫迪蘭藍 */
+      color: white;
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 4px 6px rgba(125, 157, 156, 0.2);
+      transition: all 0.2s;
+    }
+    
+    .btn-glass:hover {
+      background: rgba(125, 157, 156, 1);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 12px rgba(125, 157, 156, 0.3);
+    }
+
+    /* 調整文字顏色以配合溫暖風格 */
+    .text-warm-dark { color: #4A4A4A; }
+    .text-warm-gray { color: #787878; }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    /* 自訂下拉選單樣式 */
+    .custom-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+      background-position: right 0.5rem center;
+      background-repeat: no-repeat;
+      background-size: 1.5em 1.5em;
+      padding-right: 2.5rem;
+    }
+  </style>
+</head>
+<body>
+  
+  <!-- 載入畫面 -->
+  <div id="loading" class="loading">
+    <div class="text-center">
+      <div class="spinner mx-auto mb-4"></div>
+      <p class="text-warm-gray text-lg tracking-wide">載入資料中...</p>
+    </div>
+  </div>
+  
+  <!-- 主要內容 -->
+  <div id="main-content" class="hidden">
+    <!-- 頁首 -->
+    <header class="glass-header shadow-sm sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-warm-dark tracking-tight">效率日誌圖表分析</h1>
+            <p class="text-warm-gray mt-1 text-sm">資料視覺化儀表板</p>
+          </div>
+          <button onclick="refreshData()" 
+                  class="btn-glass px-5 py-2.5 rounded-xl flex items-center gap-2 font-medium">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            重新整理
+          </button>
+        </div>
+      </div>
+    </header>
+    
+    <!-- 統計卡片區 -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-8 mb-8">
+        
+        <!-- 月份選擇器卡片 -->
+        <div class="stat-card glass-card p-6">
+          <div class="flex items-center">
+            <div class="p-3 bg-blue-50/50 rounded-2xl">
+              <svg class="w-8 h-8 text-[#7D9D9C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div class="ml-4 w-full">
+              <p class="text-sm text-warm-gray font-medium">選擇月份</p>
+              <div class="relative mt-1">
+                <select id="month-selector" 
+                        onchange="onMonthChanged(this.value)"
+                        class="custom-select w-full bg-transparent border border-gray-300 text-warm-dark text-lg font-bold rounded-lg focus:ring-[#7D9D9C] focus:border-[#7D9D9C] block p-2">
+                  <option value="" disabled selected>載入中...</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 【新增】獎金達成狀態卡片 -->
+        <div class="stat-card glass-card p-6">
+          <div class="flex items-center">
+            <div id="bonus-icon" class="p-3 bg-yellow-50/50 rounded-2xl">
+              <svg class="w-8 h-8 text-[#E0C097]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm text-warm-gray font-medium">獎金狀態</p>
+              <p id="bonus-amount" class="text-2xl font-bold text-warm-dark mt-1">-</p>
+              <p id="bonus-rate" class="text-xs text-warm-gray mt-1">-</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 資料筆數卡片 -->
+        <div class="stat-card glass-card p-6">
+          <div class="flex items-center">
+            <div class="p-3 bg-green-50/50 rounded-2xl">
+              <svg class="w-8 h-8 text-[#8B9E81]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm text-warm-gray font-medium">資料筆數</p>
+              <p id="total-rows" class="text-2xl font-bold text-warm-dark mt-1">-</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 資料期間卡片 -->
+        <div class="stat-card glass-card p-6">
+          <div class="flex items-center">
+            <div class="p-3 bg-purple-50/50 rounded-2xl">
+              <svg class="w-8 h-8 text-[#9D8D8F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm text-warm-gray font-medium">資料期間</p>
+              <p id="date-range" class="text-lg font-bold text-warm-dark mt-1">-</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 圖表容器 -->
+      <div class="glass-card p-6 md:p-8">
+        <div id="charts-container">
+          <!-- 圖表將動態插入此處 -->
+        </div>
+      </div>
+      
+      <!-- 頁尾資訊 -->
+      <div class="text-center text-warm-gray text-sm mt-8 pb-8 font-light">
+        最後更新: <span id="last-update" class="font-normal">-</span>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // ============================================
+    // 全域變數
+    // ============================================
+    let allChartsData = null;
+    let chartInstances = {};
+    let isDropdownInitialized = false; // 追蹤下拉選單是否已初始化
+    
+    // ============================================
+    // 初始化
+    // ============================================
+    document.addEventListener('DOMContentLoaded', function() {
+      loadAllData();
+      
+      // 視窗大小改變時重繪圖表
+      let resizeTimer;
+      window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+          if (allChartsData && chartInstances['combined']) {
+            showCombinedChart(allChartsData.charts[0]);
+          }
+        }, 250); 
+      });
+    });
+    
+    // ============================================
+    // 資料載入
+    // ============================================
+    
+    /**
+     * 載入資料時支援指定月份參數
+     */
+    function loadAllData(targetMonth = null) {
+      showLoading(true);
+      
+      google.script.run
+        .withSuccessHandler(onDataLoaded)
+        .withFailureHandler(onDataLoadError)
+        .getAllChartsData(targetMonth);
+    }
+    
+    function onDataLoaded(data) {
+      console.log('資料載入成功:', data);
+      allChartsData = data;
+      
+      if (!data.charts || data.charts.length === 0) {
+        showLoading(false);
+        showError('沒有可顯示的圖表資料,請確認試算表中有數值欄位');
+        return;
+      }
+      
+      // 初始化或更新下拉選單
+      updateMonthSelector(data.metadata.availableMonths, data.metadata.currentMonth);
+      
+      updateStatistics(data);
+      updateBonusStatus(data.bonusStatus); // 【新增】更新獎金狀態卡片
+      showCombinedChart(data.charts[0]);
+      showLoading(false);
+      
+      // 顯示成功通知時包含月份資訊
+      const msg = data.metadata.currentMonth === 'ALL' 
+        ? '已顯示全部資料' 
+        : `已顯示 ${data.metadata.currentMonth} 資料`;
+      showNotification(msg, 'success');
+    }
+    
+    function onDataLoadError(error) {
+      console.error('資料載入失敗:', error);
+      showLoading(false);
+      showError('資料載入失敗: ' + error.message);
+    }
+    
+    /**
+     * 更新月份選擇器邏輯
+     */
+    function updateMonthSelector(availableMonths, currentMonth) {
+      const selector = document.getElementById('month-selector');
+      
+      // 只有第一次載入時需要建立選項,避免切換時重繪導致閃爍
+      if (!isDropdownInitialized) {
+        selector.innerHTML = '';
+        
+        // 加入「全部顯示」選項
+        const allOption = document.createElement('option');
+        allOption.value = 'ALL';
+        allOption.text = '全部顯示';
+        selector.appendChild(allOption);
+        
+        // 加入各月份選項
+        availableMonths.forEach(month => {
+          const option = document.createElement('option');
+          option.value = month;
+          option.text = month;
+          selector.appendChild(option);
+        });
+        
+        isDropdownInitialized = true;
+      }
+      
+      // 設定目前選中的月份
+      if (currentMonth) {
+        selector.value = currentMonth;
+      }
+    }
+    
+    /**
+     * 下拉選單變更事件處理
+     */
+    function onMonthChanged(value) {
+      // 重新載入指定月份的資料
+      loadAllData(value);
+    }
+    
+    // ============================================
+    // UI 更新函式
+    // ============================================
+    
+    /**
+     * 更新統計資訊
+     */
+    function updateStatistics(data) {
+      document.getElementById('total-rows').textContent = data.summary.totalRows;
+      
+      const dateRange = data.summary.dateRange;
+      if (dateRange) {
+        document.getElementById('date-range').textContent = 
+          `${dateRange.start} ~ ${dateRange.end}`;
+      } else {
+        document.getElementById('date-range').textContent = '無日期資料';
+      }
+      
+      document.getElementById('last-update').textContent = data.metadata.lastUpdate;
+    }
+    
+    /**
+     * 【修改】更新獎金達成狀態卡片 - 移除達標天數顯示
+     */
+    function updateBonusStatus(bonusStatus) {
+      const bonusIcon = document.getElementById('bonus-icon');
+      const bonusAmount = document.getElementById('bonus-amount');
+      const bonusRate = document.getElementById('bonus-rate');
+      
+      // 四捨五入取整數
+      const latestRatePercent = Math.round(bonusStatus.latestRate * 100);
+      
+      if (bonusStatus.achieved && bonusStatus.highestThreshold) {
+        // 達成獎金門檻
+        const threshold = bonusStatus.highestThreshold;
+        const amount = threshold.label.match(/\$[\d,]+/)[0]; // 提取金額
+        
+        bonusAmount.textContent = amount;
+        bonusAmount.style.color = threshold.color;
+        // 【修改】只顯示最近達成率
+        bonusRate.textContent = `達成率 ${latestRatePercent}%`;
+        
+        // 更新圖示顏色
+        bonusIcon.className = 'p-3 rounded-2xl';
+        bonusIcon.style.backgroundColor = `${threshold.color}20`;
+        bonusIcon.querySelector('svg').style.color = threshold.color;
+        
+      } else {
+        // 未達成任何門檻
+        bonusAmount.textContent = '未達標';
+        bonusAmount.style.color = '#787878';
+        bonusRate.textContent = `達成率 ${latestRatePercent}%`;
+        
+        // 重置圖示顏色
+        bonusIcon.className = 'p-3 bg-gray-50/50 rounded-2xl';
+        bonusIcon.querySelector('svg').style.color = '#B4A5A5';
+      }
+    }
+    
+    /**
+     * 顯示組合圖表
+     */
+    function showCombinedChart(chartData) {
+      const container = document.getElementById('charts-container');
+      container.innerHTML = '';
+      
+      const chartWrapper = document.createElement('div');
+      chartWrapper.className = 'chart-container';
+      
+      if (window.innerWidth <= 768) {
+        chartWrapper.style.height = '450px';
+      } else {
+        chartWrapper.style.height = '500px';
+      }
+      
+      const canvas = document.createElement('canvas');
+      canvas.id = 'combined-chart';
+      chartWrapper.appendChild(canvas);
+      
+      container.appendChild(chartWrapper);
+      
+      if (chartInstances['combined']) {
+        chartInstances['combined'].destroy();
+      }
+      
+      createCombinedChart(canvas, chartData);
+    }
+    
+    /**
+     * 建立組合圖表 (更新字體顏色以適應 Morandi 風格)
+     * 【修改】獎金門檻標示改為不顯示標籤,標籤資訊移至圖例區
+     */
+    function createCombinedChart(canvas, chartData) {
+      const ctx = canvas.getContext('2d');
+      const isMobile = window.innerWidth <= 768;
+      
+      const labels = chartData.labels;
+      const totalLabels = labels.length;
+      let maxLabels = isMobile ? 10 : 15;
+      const step = Math.ceil(totalLabels / maxLabels);
+      
+      const fontColor = '#666'; // 溫暖的深灰色字體
+      
+      // 【修改】建立獎金門檻標示線配置 - 移除標籤顯示
+      const annotations = {};
+      if (chartData.bonusThresholds) {
+        chartData.bonusThresholds.forEach((threshold, index) => {
+          annotations[`threshold${index}`] = {
+            type: 'line',
+            yMin: threshold.value,
+            yMax: threshold.value,
+            yScaleID: 'y-percentage',
+            borderColor: threshold.color,
+            borderWidth: 2,
+            borderDash: [6, 6], // 虛線樣式
+            // 【修改】移除 label 設定,改為在圖例中顯示
+          };
+        });
+      }
+      
+      const config = {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: chartData.datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false,
+          },
+          plugins: {
+            // 啟用標示線插件
+            annotation: {
+              annotations: annotations
+            },
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                padding: isMobile ? 10 : 20,
+                color: fontColor,
+                font: {
+                  size: isMobile ? 11 : 13,
+                  family: "'Noto Sans TC', sans-serif"
+                },
+                usePointStyle: true,
+                boxWidth: isMobile ? 10 : 12,
+                // 【新增】自訂圖例生成,加入獎金門檻標示
+                generateLabels: function(chart) {
+                  const original = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                  
+                  // 加入獎金門檻標示到圖例
+                  if (chartData.bonusThresholds) {
+                    chartData.bonusThresholds.forEach(threshold => {
+                      original.push({
+                        text: threshold.label,
+                        fillStyle: threshold.color,
+                        strokeStyle: threshold.color,
+                        lineWidth: 2,
+                        lineDash: [6, 6],
+                        hidden: false,
+                        index: original.length,
+                        // 點樣式設為線條
+                        pointStyle: 'line'
+                      });
+                    });
+                  }
+                  
+                  return original;
+                }
+              }
+            },
+            title: {
+              display: true,
+              text: chartData.label,
+              color: '#4A4A4A',
+              font: {
+                size: isMobile ? 16 : 22,
+                weight: '500',
+                family: "'Noto Sans TC', sans-serif"
+              },
+              padding: {
+                top: isMobile ? 5 : 10,
+                bottom: isMobile ? 15 : 25
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              titleColor: '#333',
+              bodyColor: '#555',
+              borderColor: 'rgba(0,0,0,0.1)',
+              borderWidth: 1,
+              padding: 12,
+              boxPadding: 4,
+              callbacks: {
+                label: function(context) {
+                  let label = context.dataset.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  // 【修改】達成率四捨五入取整數
+                  if (context.dataset.label.includes('率')) {
+                    label += Math.round(context.parsed.y * 100) + '%';
+                  } else {
+                    label += context.parsed.y.toLocaleString();
+                  }
+                  return label;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: {
+                color: fontColor,
+                maxRotation: isMobile ? 60 : 45,
+                minRotation: isMobile ? 60 : 45,
+                autoSkip: true,
+                maxTicksLimit: maxLabels,
+                callback: function(value, index) {
+                  if (index % step === 0 || index === totalLabels - 1) {
+                    return labels[index];
+                  }
+                  return '';
+                }
+              },
+              grid: {
+                display: false
+              }
+            },
+            'y-count': {
+              type: 'linear',
+              position: 'right', 
+              beginAtZero: true,
+              title: {
+                display: !isMobile,
+                text: '數量',
+                color: fontColor,
+                font: { size: 14, weight: '500' }
+              },
+              ticks: {
+                color: fontColor
+              },
+              grid: {
+                drawOnChartArea: false
+              }
+            },
+            'y-percentage': {
+              type: 'linear',
+              position: 'left',
+              beginAtZero: true,
+              max: 1,
+              title: {
+                display: !isMobile,
+                text: '達成率',
+                color: fontColor,
+                font: { size: 14, weight: '500' }
+              },
+              ticks: {
+                color: fontColor,
+                callback: function(value) {
+                  return (value * 100).toFixed(0) + '%';
+                }
+              },
+              grid: {
+                color: 'rgba(0, 0, 0, 0.05)',
+                borderDash: [4, 4]
+              }
+            }
+          }
+        }
+      };
+      
+      chartInstances['combined'] = new Chart(ctx, config);
+    }
+    
+    // ============================================
+    // 輔助函式
+    // ============================================
+    
+    function showLoading(show) {
+      document.getElementById('loading').style.display = show ? 'flex' : 'none';
+      document.getElementById('main-content').classList.toggle('hidden', show);
+    }
+    
+    function showError(message) {
+      const container = document.getElementById('charts-container');
+      container.innerHTML = `
+        <div class="text-center py-12">
+          <svg class="w-16 h-16 text-[#C78283] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <h3 class="text-xl font-semibold text-warm-dark mb-2">發生錯誤</h3>
+          <p class="text-warm-gray">${message}</p>
+          <button onclick="refreshData()" 
+                  class="mt-4 btn-glass px-6 py-2 rounded-xl">
+            重試
+          </button>
+        </div>
+      `;
+    }
+    
+    function showNotification(message, type = 'success') {
+      const oldNotification = document.querySelector('.notification');
+      if (oldNotification) {
+        oldNotification.remove();
+      }
+      
+      const notification = document.createElement('div');
+      // 根據類型使用莫迪蘭綠或紅
+      const colorClass = type === 'success' 
+          ? 'bg-green-50/80 text-[#5F6F52] border-[#8B9E81]' 
+          : 'bg-red-50/80 text-[#8B5E5E] border-[#C78283]';
+          
+      notification.className = `notification ${colorClass}`;
+      
+      notification.innerHTML = `
+        <div class="flex items-center">
+          <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            ${type === 'success' 
+              ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />'
+              : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />'
+            }
+          </svg>
+          <span class="font-medium">${message}</span>
+        </div>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.animation = 'slideIn 0.3s ease-out reverse';
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+    
+    /**
+     * 重新整理時重置下拉選單狀態
+     */
+    function refreshData() {
+      // 重置下拉選單初始化狀態,強制重新抓取月份
+      isDropdownInitialized = false;
+      
+      Object.values(chartInstances).forEach(chart => chart.destroy());
+      chartInstances = {};
+      loadAllData();
+    }
+  </script>
+</body>
+</html>
