@@ -221,7 +221,7 @@
                             
                             // Return Value on top, Percentage below
                             if (value > 400) { // arbitrary threshold to hide labels on tiny slices
-                                return value.toLocaleString();
+                                return value.toLocaleString() + '\n' + percentage;
                             } else {
                                 return null;
                             }
