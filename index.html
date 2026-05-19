@@ -25,20 +25,23 @@
         }
 
         .menu-button {
+            position: relative;
             display: flex;
             align-items: center;
             gap: 20px;
             padding: 25px 40px;
             font-size: 52px;
-            border: none;
+            border: 2px solid transparent;
             border-radius: 12px;
             background-color: #2d2d2d;
             color: #ffffff;
             cursor: pointer;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            transition: transform 0.2s, box-shadow 0.2s;
+            overflow: hidden;
+            transition: transform 0.16s, box-shadow 0.16s, border-color 0.16s, background-color 0.16s;
             width: 500px;
             height: 300px;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .button-text {
@@ -64,16 +67,80 @@
             font-size: 32px;
         }
 
-        .menu-button:hover {
+        .menu-button:hover,
+        .menu-button:focus-visible {
             transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+            box-shadow: 0 10px 24px rgba(0,0,0,0.45);
             background-color: #3d3d3d;
+            border-color: var(--accent, #ff69b4);
+            outline: none;
+        }
+
+        .menu-button:active {
+            transform: scale(0.98);
+            background-color: #4a4a4a;
+        }
+
+        .menu-button::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent);
+            opacity: 0;
+            transform: translateX(-100%);
+            pointer-events: none;
+        }
+
+        .menu-button.is-opening::before {
+            animation: loadingSweep 0.9s ease-out;
+            opacity: 1;
+        }
+
+        .menu-button.is-opening::after {
+            content: "正在開啟...";
+            position: absolute;
+            right: 24px;
+            bottom: 18px;
+            color: #ffd166;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0;
+        }
+
+        .menu-button[data-accent="green"] {
+            --accent: #38d39f;
+        }
+
+        .menu-button[data-accent="blue"] {
+            --accent: #5ca8ff;
+        }
+
+        .menu-button[data-accent="yellow"] {
+            --accent: #ffd166;
+        }
+
+        .menu-button[data-accent="pink"] {
+            --accent: #ff69b4;
         }
 
         .menu-button svg {
             width: 72px;
             height: 72px;
-            stroke: #ff69b4;
+            flex: 0 0 auto;
+            stroke: var(--accent, #ff69b4);
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.68);
+            opacity: 0;
+            transition: opacity 0.16s ease-out;
+            z-index: 10;
+        }
+
+        .modal-backdrop.show {
+            opacity: 1;
         }
 
         #qrcode {
@@ -86,10 +153,14 @@
             border-radius: 12px;
             box-shadow: 0 6px 16px rgba(0,0,0,0.4);
             display: none;
+            z-index: 11;
+            border: 2px solid #ff69b4;
+            text-align: center;
         }
 
         #qrcode.show {
             display: block;
+            animation: popIn 0.16s ease-out;
         }
 
         .close-button {
@@ -113,17 +184,80 @@
             background-color: #3d3d3d;
         }
 
+        .close-button:focus-visible {
+            outline: 2px solid #ffd166;
+            outline-offset: 2px;
+        }
+
+        .qr-title {
+            margin: 0 44px 16px;
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+        .qr-caption {
+            margin-top: 14px;
+            color: #d6d6d6;
+            font-size: 18px;
+        }
+
         #qrcode img {
             margin: 20px;
             padding: 20px;
             background: white;
             border-radius: 8px;
         }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 30px;
+            transform: translate(-50%, 16px);
+            min-width: 260px;
+            max-width: min(90vw, 520px);
+            padding: 16px 22px;
+            border-radius: 10px;
+            background: #ffffff;
+            color: #1a1a1a;
+            font-size: 22px;
+            font-weight: 700;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.4);
+            transition: opacity 0.16s ease-out, transform 0.16s ease-out;
+            z-index: 20;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+
+        @keyframes loadingSweep {
+            from {
+                transform: translateX(-100%);
+            }
+            to {
+                transform: translateX(100%);
+            }
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.94);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
     </style>
 </head>
 <body>
     <div class="button-container">
-        <button class="menu-button" onclick="window.open('https://alstonhsiao.github.io/dgstand/standWorkFlow/2F.html', '_blank')">
+        <button class="menu-button" data-url="https://alstonhsiao.github.io/dgstand/standWorkFlow/2F.html" data-label="Timesheet" data-accent="pink">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
             <div class="button-text">
                 <span class="text-zh">報工</span>
@@ -131,31 +265,77 @@
                 <span class="text-en">Timesheet</span>
             </div>
         </button>
-        <button class="menu-button" onclick="window.open('https://script.google.com/a/macros/dgstand.com/s/AKfycbz6qB6abhomvLEYDewqcdHVhK10wh4ozgE2sCrKHfBb2NlmvW_j1xlJ3tHQ0pu1upp23w/exec', '_blank')">
+        <button class="menu-button" data-url="https://script.google.com/a/macros/dgstand.com/s/AKfycbz6qB6abhomvLEYDewqcdHVhK10wh4ozgE2sCrKHfBb2NlmvW_j1xlJ3tHQ0pu1upp23w/exec" data-label="SOP" data-accent="blue">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
             SOP
         </button>
-        <button class="menu-button" onclick="window.open('https://johnny6891.github.io/TorqueWrenchQC.html', '_blank')">
+        <button class="menu-button" data-url="https://johnny6891.github.io/TorqueWrenchQC.html" data-label="QC" data-accent="green">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect width="6" height="4" x="9" y="3" rx="2"/><path d="m9 14 2 2 4-4"/></svg>
             QC
         </button>
-        <button class="menu-button" onclick="showQRCode()">
+        <button class="menu-button" id="qr-button" data-accent="yellow">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>
             QR Code
         </button>
     </div>
 
-    <div id="qrcode">
-        <button class="close-button" onclick="hideQRCode()">×</button>
+    <div class="modal-backdrop" id="modal-backdrop" hidden></div>
+    <div id="qrcode" role="dialog" aria-modal="true" aria-label="QR Code" hidden>
+        <button class="close-button" id="close-qr-button" aria-label="關閉 QR Code">×</button>
+        <div class="qr-title">QR Code</div>
+        <div id="qr-content"></div>
+        <div class="qr-caption">掃描目前頁面</div>
     </div>
+    <div class="toast" id="status-toast" role="status" aria-live="polite"></div>
 
     <script>
+        const qrcodeDiv = document.getElementById('qrcode');
+        const qrContent = document.getElementById('qr-content');
+        const modalBackdrop = document.getElementById('modal-backdrop');
+        const toast = document.getElementById('status-toast');
+        let toastTimer;
+
+        document.querySelectorAll('.menu-button[data-url]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const label = button.dataset.label || '頁面';
+                const opened = window.open(button.dataset.url, '_blank', 'noopener');
+
+                button.classList.add('is-opening');
+                window.setTimeout(() => button.classList.remove('is-opening'), 950);
+                showToast(opened ? `正在開啟 ${label}` : `瀏覽器封鎖了 ${label} 的新視窗`);
+            });
+        });
+
+        document.getElementById('qr-button').addEventListener('click', showQRCode);
+        document.getElementById('close-qr-button').addEventListener('click', hideQRCode);
+        modalBackdrop.addEventListener('click', hideQRCode);
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && qrcodeDiv.classList.contains('show')) {
+                hideQRCode();
+            }
+        });
+
+        function showToast(message) {
+            window.clearTimeout(toastTimer);
+            toast.textContent = message;
+            toast.classList.add('show');
+            toastTimer = window.setTimeout(() => {
+                toast.classList.remove('show');
+            }, 1800);
+        }
+
         function showQRCode() {
-            const qrcodeDiv = document.getElementById('qrcode');
-            qrcodeDiv.innerHTML = '<button class="close-button" onclick="hideQRCode()">×</button>';
-            qrcodeDiv.classList.add('show');
+            qrContent.innerHTML = '';
+            modalBackdrop.hidden = false;
+            qrcodeDiv.hidden = false;
+            window.requestAnimationFrame(() => {
+                modalBackdrop.classList.add('show');
+                qrcodeDiv.classList.add('show');
+            });
+            showToast('QR Code 已顯示');
+            document.getElementById('close-qr-button').focus();
             
-            new QRCode(qrcodeDiv, {
+            new QRCode(qrContent, {
                 text: window.location.href,
                 width: 300,
                 height: 300
@@ -163,9 +343,15 @@
         }
 
         function hideQRCode() {
-            const qrcodeDiv = document.getElementById('qrcode');
+            modalBackdrop.classList.remove('show');
             qrcodeDiv.classList.remove('show');
-            qrcodeDiv.innerHTML = '<button class="close-button" onclick="hideQRCode()">×</button>';
+            window.setTimeout(() => {
+                if (!qrcodeDiv.classList.contains('show')) {
+                    modalBackdrop.hidden = true;
+                    qrcodeDiv.hidden = true;
+                    qrContent.innerHTML = '';
+                }
+            }, 160);
         }
     </script>
 </body>
